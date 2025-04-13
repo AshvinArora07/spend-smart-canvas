@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { toast } from "sonner";
+import { SortOptions } from "@/components/transaction/types";
 
 export type TransactionType = "income" | "expense" | "savings";
 
@@ -25,7 +26,13 @@ type FinanceContextType = {
   getCategoryTotals: (type: TransactionType) => CategoryTotals;
   getMonthlyData: () => { month: string; income: number; expense: number; savings: number }[];
   isLoading: boolean;
-  sortTransactions: (by: "date" | "amount" | "category", order: "asc" | "desc") => Transaction[];
+  sortTransactions: (sortOptions: SortOptions) => Transaction[];
+  getTrendData: (type: TransactionType, months: number) => { 
+    percentageChange: number; 
+    isIncrease: boolean;
+    previousTotal: number;
+    currentTotal: number;
+  };
 };
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
@@ -50,7 +57,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     if (storedTransactions) {
       setTransactions(JSON.parse(storedTransactions));
     } else {
-      // Initialize with empty array instead of mock data
+      // Initialize with empty array
       setTransactions([]);
       localStorage.setItem("financeTransactions", JSON.stringify([]));
     }
@@ -121,19 +128,20 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     
     return Object.values(monthlyData).sort((a, b) => {
       // Sort by month-year descending
-      const [aYear, aMonth] = a.month.split('-');
-      const [bYear, bMonth] = b.month.split('-');
-      return new Date(Number(bYear), Number(bMonth) - 1).getTime() - 
-             new Date(Number(aYear), Number(aMonth) - 1).getTime();
+      const aMonth = new Date(Date.parse(`${a.month} 1, 2000`)).getMonth();
+      const bMonth = new Date(Date.parse(`${b.month} 1, 2000`)).getMonth();
+      return aMonth - bMonth;
     });
   };
 
-  // New sorting function
-  const sortTransactions = (by: "date" | "amount" | "category" = "date", order: "asc" | "desc" = "desc") => {
+  // New sorting function with better TypeScript typing
+  const sortTransactions = (sortOptions: SortOptions) => {
+    const { field, order } = sortOptions;
+    
     return [...transactions].sort((a, b) => {
       let comparison = 0;
       
-      switch (by) {
+      switch (field) {
         case "date":
           comparison = new Date(b.date).getTime() - new Date(a.date).getTime();
           break;
@@ -151,6 +159,48 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // New function to get trend data comparing current month with previous periods
+  const getTrendData = (type: TransactionType, months: number = 1) => {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const previousMonthStart = new Date(now.getFullYear(), now.getMonth() - months, 1);
+    
+    // Get current month total
+    const currentTotal = transactions
+      .filter(t => t.type === type && new Date(t.date) >= currentMonthStart)
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    // Get previous month(s) total
+    const previousTotal = transactions
+      .filter(
+        t => t.type === type && 
+        new Date(t.date) >= previousMonthStart && 
+        new Date(t.date) < currentMonthStart
+      )
+      .reduce((sum, t) => sum + t.amount, 0);
+    
+    // Calculate percentage change
+    let percentageChange = 0;
+    let isIncrease = false;
+    
+    if (previousTotal > 0) {
+      percentageChange = ((currentTotal - previousTotal) / previousTotal) * 100;
+      isIncrease = percentageChange > 0;
+      percentageChange = Math.abs(percentageChange);
+    } else if (currentTotal > 0) {
+      // If previousTotal is 0 but currentTotal has value, it's a 100% increase
+      percentageChange = 100;
+      isIncrease = true;
+    }
+    
+    return { 
+      percentageChange: parseFloat(percentageChange.toFixed(1)), 
+      isIncrease,
+      previousTotal,
+      currentTotal
+    };
+  };
+
   return (
     <FinanceContext.Provider
       value={{
@@ -161,7 +211,8 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         getCategoryTotals,
         getMonthlyData,
         isLoading,
-        sortTransactions
+        sortTransactions,
+        getTrendData
       }}
     >
       {children}

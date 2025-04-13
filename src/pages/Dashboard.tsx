@@ -7,6 +7,7 @@ import TransactionForm from "@/components/TransactionForm";
 import TransactionsList from "@/components/TransactionsList";
 import ExpensePieChart from "@/components/ExpensePieChart";
 import MonthlyBarChart from "@/components/MonthlyBarChart";
+import TrendComparisonChart from "@/components/TrendComparisonChart";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,7 @@ import {
   PlusIcon,
   LogOutIcon,
   UserIcon,
+  BarChart3Icon,
 } from "lucide-react";
 
 const formatCurrency = (amount: number) => {
@@ -41,7 +43,7 @@ const formatCurrency = (amount: number) => {
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
-  const { getTotal } = useFinance();
+  const { getTotal, getTrendData } = useFinance();
   const [transactionDialogOpen, setTransactionDialogOpen] = useState(false);
   
   const income = getTotal("income");
@@ -49,11 +51,29 @@ const Dashboard = () => {
   const savings = getTotal("savings");
   const balance = income - expenses;
   
-  // Placeholder trend values (in a real app, these would be calculated)
-  const incomeTrend = { value: 5.2, label: "last month" };
-  const expenseTrend = { value: -2.8, label: "last month" };
-  const savingsTrend = { value: 7.5, label: "last month" };
-  const balanceTrend = { value: 10.3, label: "last month" };
+  // Get trend data for dashboard cards
+  const incomeTrend = getTrendData("income", 1);
+  const expenseTrend = getTrendData("expense", 1);
+  const savingsTrend = getTrendData("savings", 1);
+  const balanceTrend = {
+    percentageChange: 0,
+    isIncrease: false,
+    previousTotal: 0,
+    currentTotal: 0
+  };
+  
+  // Calculate balance trend if we have previous data
+  if (incomeTrend.previousTotal > 0 || expenseTrend.previousTotal > 0) {
+    const previousBalance = incomeTrend.previousTotal - expenseTrend.previousTotal;
+    balanceTrend.previousTotal = previousBalance;
+    balanceTrend.currentTotal = balance;
+    
+    if (previousBalance !== 0) {
+      balanceTrend.percentageChange = 
+        parseFloat((Math.abs(balance - previousBalance) / Math.abs(previousBalance) * 100).toFixed(1));
+      balanceTrend.isIncrease = balance > previousBalance;
+    }
+  }
   
   return (
     <div className="min-h-screen bg-finance-background pb-8">
@@ -113,29 +133,50 @@ const Dashboard = () => {
             title="Available Balance"
             value={formatCurrency(balance)}
             icon={<WalletIcon className="h-5 w-5" />}
-            trend={balanceTrend}
+            trend={{
+              value: balanceTrend.percentageChange,
+              label: "last month",
+              direction: balanceTrend.isIncrease ? "up" : "down"
+            }}
           />
           <DashboardCard
             title="Total Income"
             value={formatCurrency(income)}
             icon={<ArrowDownIcon className="h-5 w-5 text-finance-income" />}
-            trend={incomeTrend}
+            trend={{
+              value: incomeTrend.percentageChange,
+              label: "last month",
+              direction: incomeTrend.isIncrease ? "up" : "down"
+            }}
             className="border-l-4 border-finance-income"
           />
           <DashboardCard
             title="Total Expenses"
             value={formatCurrency(expenses)}
             icon={<ArrowUpIcon className="h-5 w-5 text-finance-expense" />}
-            trend={expenseTrend}
+            trend={{
+              value: expenseTrend.percentageChange,
+              label: "last month",
+              direction: expenseTrend.isIncrease ? "up" : "down"
+            }}
             className="border-l-4 border-finance-expense"
           />
           <DashboardCard
             title="Total Savings"
             value={formatCurrency(savings)}
             icon={<PiggyBankIcon className="h-5 w-5 text-finance-savings" />}
-            trend={savingsTrend}
+            trend={{
+              value: savingsTrend.percentageChange,
+              label: "last month",
+              direction: savingsTrend.isIncrease ? "up" : "down"
+            }}
             className="border-l-4 border-finance-savings"
           />
+        </div>
+        
+        {/* Trend Comparison Chart */}
+        <div>
+          <TrendComparisonChart months={3} />
         </div>
         
         {/* Charts */}

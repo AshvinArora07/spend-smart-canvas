@@ -20,3 +20,10 @@ export interface SortOptions {
   field: SortField;
   order: SortOrder;
 }
+
+export interface TrendData {
+  percentageChange: number;
+  isIncrease: boolean;
+  previousTotal: number;
+  currentTotal: number;
+}
