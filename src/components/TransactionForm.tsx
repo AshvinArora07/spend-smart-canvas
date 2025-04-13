@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useFinance } from "@/context/FinanceContext";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const transactionSchema = z.object({
   type: z.enum(["income", "expense", "savings"]),
@@ -45,7 +46,8 @@ const transactionSchema = z.object({
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
-const categoryOptions = {
+// Default categories
+const defaultCategoryOptions = {
   income: ["Salary", "Freelance", "Investments", "Gift", "Other"],
   expense: ["Food", "Housing", "Transportation", "Entertainment", "Healthcare", "Shopping", "Utilities", "Other"],
   savings: ["Emergency Fund", "Retirement", "Investment", "Goal Saving", "Other"]
@@ -54,6 +56,9 @@ const categoryOptions = {
 const TransactionForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const { addTransaction } = useFinance();
   const [selectedType, setSelectedType] = useState<"income" | "expense" | "savings">("expense");
+  const [newCategory, setNewCategory] = useState("");
+  const [categoryOptions, setCategoryOptions] = useState(defaultCategoryOptions);
+  const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
@@ -83,9 +88,37 @@ const TransactionForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       date: new Date(),
     });
     
+    toast.success("Transaction added successfully!");
+    
     if (onSuccess) {
       onSuccess();
     }
+  };
+
+  const handleAddCategory = () => {
+    if (!newCategory.trim()) {
+      toast.error("Please enter a category name");
+      return;
+    }
+
+    if (categoryOptions[selectedType].includes(newCategory.trim())) {
+      toast.error("This category already exists");
+      return;
+    }
+
+    setCategoryOptions((prev) => ({
+      ...prev,
+      [selectedType]: [...prev[selectedType], newCategory.trim()],
+    }));
+
+    // Select the newly added category
+    form.setValue("category", newCategory.trim());
+    
+    // Reset and hide the input
+    setNewCategory("");
+    setShowCustomCategoryInput(false);
+    
+    toast.success(`Added new ${selectedType} category: ${newCategory}`);
   };
   
   return (
@@ -106,6 +139,7 @@ const TransactionForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                       field.onChange(value);
                       setSelectedType(value as "income" | "expense" | "savings");
                       form.setValue("category", "");
+                      setShowCustomCategoryInput(false);
                     }} 
                     defaultValue={field.value}
                   >
@@ -130,20 +164,42 @@ const TransactionForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <FormControl>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions[selectedType].map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
+                <div className="space-y-2">
+                  <FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoryOptions[selectedType].map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="custom" className="text-primary font-medium">
+                          + Add custom category
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FormControl>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  {field.value === "custom" && (
+                    <div className="flex gap-2 items-center mt-2">
+                      <Input
+                        placeholder="Enter new category"
+                        value={newCategory}
+                        onChange={(e) => setNewCategory(e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button 
+                        type="button" 
+                        size="sm" 
+                        onClick={handleAddCategory}
+                      >
+                        <Plus className="h-4 w-4 mr-1" /> Add
+                      </Button>
+                    </div>
+                  )}
+                </div>
                 <FormMessage />
               </FormItem>
             )}
