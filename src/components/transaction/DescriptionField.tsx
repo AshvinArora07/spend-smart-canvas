@@ -6,9 +6,11 @@ import { TransactionFormValues } from "./types";
 
 interface DescriptionFieldProps {
   form: UseFormReturn<TransactionFormValues>;
+  placeholder?: string;
+  maxLength?: number;
 }
 
-const DescriptionField = ({ form }: DescriptionFieldProps) => {
+const DescriptionField = ({ form, placeholder = "Enter transaction details", maxLength = 200 }: DescriptionFieldProps) => {
   return (
     <FormField
       control={form.control}
@@ -18,8 +20,9 @@ const DescriptionField = ({ form }: DescriptionFieldProps) => {
           <FormLabel>Description</FormLabel>
           <FormControl>
             <Textarea 
-              placeholder="Enter transaction details" 
+              placeholder={placeholder} 
               className="resize-none" 
+              maxLength={maxLength}
               {...field} 
             />
           </FormControl>

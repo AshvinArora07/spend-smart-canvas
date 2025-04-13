@@ -25,90 +25,15 @@ type FinanceContextType = {
   getCategoryTotals: (type: TransactionType) => CategoryTotals;
   getMonthlyData: () => { month: string; income: number; expense: number; savings: number }[];
   isLoading: boolean;
+  sortTransactions: (by: "date" | "amount" | "category", order: "asc" | "desc") => Transaction[];
 };
 
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
-const CATEGORIES = {
+export const CATEGORIES = {
   income: ["Salary", "Freelance", "Investments", "Gift", "Other"],
   expense: ["Food", "Housing", "Transportation", "Entertainment", "Healthcare", "Shopping", "Utilities", "Other"],
   savings: ["Emergency Fund", "Retirement", "Investment", "Goal Saving", "Other"]
-};
-
-// Mock data for demo
-const generateMockTransactions = (): Transaction[] => {
-  const currentDate = new Date();
-  const mockData: Transaction[] = [];
-  
-  // Generate 3 months of data
-  for (let i = 0; i < 3; i++) {
-    const month = new Date();
-    month.setMonth(currentDate.getMonth() - i);
-    
-    // Income
-    mockData.push({
-      id: `income-${i}-1`,
-      type: "income",
-      amount: 3000 + Math.floor(Math.random() * 500),
-      description: "Monthly salary",
-      category: "Salary",
-      date: new Date(month.getFullYear(), month.getMonth(), 1).toISOString(),
-    });
-    
-    // Freelance income
-    if (Math.random() > 0.3) {
-      mockData.push({
-        id: `income-${i}-2`,
-        type: "income",
-        amount: 500 + Math.floor(Math.random() * 300),
-        description: "Freelance project",
-        category: "Freelance",
-        date: new Date(month.getFullYear(), month.getMonth(), 15).toISOString(),
-      });
-    }
-    
-    // Expenses - multiple per month
-    for (let j = 0; j < 8; j++) {
-      const day = Math.floor(Math.random() * 28) + 1;
-      const category = CATEGORIES.expense[Math.floor(Math.random() * CATEGORIES.expense.length)];
-      let amount = 0;
-      
-      switch (category) {
-        case "Food":
-          amount = 20 + Math.floor(Math.random() * 50);
-          break;
-        case "Housing":
-          amount = 800 + Math.floor(Math.random() * 200);
-          break;
-        case "Transportation":
-          amount = 40 + Math.floor(Math.random() * 60);
-          break;
-        default:
-          amount = 30 + Math.floor(Math.random() * 100);
-      }
-      
-      mockData.push({
-        id: `expense-${i}-${j}`,
-        type: "expense",
-        amount,
-        description: `${category} expense`,
-        category,
-        date: new Date(month.getFullYear(), month.getMonth(), day).toISOString(),
-      });
-    }
-    
-    // Savings
-    mockData.push({
-      id: `savings-${i}-1`,
-      type: "savings",
-      amount: 300 + Math.floor(Math.random() * 200),
-      description: "Monthly savings",
-      category: "Emergency Fund",
-      date: new Date(month.getFullYear(), month.getMonth(), 5).toISOString(),
-    });
-  }
-  
-  return mockData;
 };
 
 export const FinanceProvider = ({ children }: { children: ReactNode }) => {
@@ -125,10 +50,9 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     if (storedTransactions) {
       setTransactions(JSON.parse(storedTransactions));
     } else {
-      // Generate mock data for demo
-      const mockTransactions = generateMockTransactions();
-      setTransactions(mockTransactions);
-      localStorage.setItem("financeTransactions", JSON.stringify(mockTransactions));
+      // Initialize with empty array instead of mock data
+      setTransactions([]);
+      localStorage.setItem("financeTransactions", JSON.stringify([]));
     }
     
     setIsLoading(false);
@@ -136,9 +60,7 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
 
   // Save transactions to localStorage whenever they change
   useEffect(() => {
-    if (transactions.length > 0) {
-      localStorage.setItem("financeTransactions", JSON.stringify(transactions));
-    }
+    localStorage.setItem("financeTransactions", JSON.stringify(transactions));
   }, [transactions]);
 
   const addTransaction = (transaction: Omit<Transaction, "id">) => {
@@ -206,6 +128,29 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
+  // New sorting function
+  const sortTransactions = (by: "date" | "amount" | "category" = "date", order: "asc" | "desc" = "desc") => {
+    return [...transactions].sort((a, b) => {
+      let comparison = 0;
+      
+      switch (by) {
+        case "date":
+          comparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+          break;
+        case "amount":
+          comparison = b.amount - a.amount;
+          break;
+        case "category":
+          comparison = a.category.localeCompare(b.category);
+          break;
+        default:
+          comparison = new Date(b.date).getTime() - new Date(a.date).getTime();
+      }
+      
+      return order === "asc" ? -comparison : comparison;
+    });
+  };
+
   return (
     <FinanceContext.Provider
       value={{
@@ -215,7 +160,8 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
         getTotal,
         getCategoryTotals,
         getMonthlyData,
-        isLoading
+        isLoading,
+        sortTransactions
       }}
     >
       {children}

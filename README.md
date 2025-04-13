@@ -1,73 +1,127 @@
-# Welcome to your Lovable project
 
-## Project info
+# SpendSmart - Personal Finance Tracker
 
-**URL**: https://lovable.dev/projects/65d714e1-7f4d-4bbb-b3f2-1b01e96f37f1
+## Overview
 
-## How can I edit this code?
+SpendSmart is a dynamic personal finance tracking web application built with React, TypeScript, and modern web technologies. It helps users manage their income, expenses, and savings through an intuitive interface with visual charts and detailed transaction management.
 
-There are several ways of editing your application.
+## Features
 
-**Use Lovable**
+- **User Authentication**: Secure login and registration system
+- **Financial Dashboard**: Overview of income, expenses, savings, and available balance
+- **Transaction Management**: Add, delete, and categorize financial transactions
+- **Data Visualization**: Charts to visualize spending patterns and financial trends
+- **Responsive Design**: Works seamlessly across mobile, tablet, and desktop devices
+- **Custom Categories**: Create and manage custom categories for different transaction types
+- **Sorting and Filtering**: Sort transactions by date, amount, or category, and filter by transaction type
+- **Local Storage**: Transactions persist between sessions using browser storage
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/65d714e1-7f4d-4bbb-b3f2-1b01e96f37f1) and start prompting.
+## Technologies Used
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Frontend**:
+  - React 18
+  - TypeScript
+  - TailwindCSS for styling
+  - Shadcn UI components
+  - React Hook Form for form handling
+  - Zod for form validation
+  - Recharts for data visualization
+  - Lucide React for iconography
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js (v16 or newer)
+- npm or yarn
 
-Follow these steps:
+### Installation
 
+1. Clone the repository
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+git clone https://github.com/yourusername/spendsmart.git
+cd spendsmart
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies
+```sh
+npm install
+# or
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Start the development server
+```sh
+npm run dev
+# or
+yarn dev
+```
 
-**Use GitHub Codespaces**
+4. Open your browser and navigate to `http://localhost:5173`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Usage
 
-## What technologies are used for this project?
+### Adding Transactions
 
-This project is built with:
+1. Click the "New Transaction" button in the header
+2. Select the transaction type (income, expense, or savings)
+3. Choose or create a category
+4. Enter the amount
+5. Add a description
+6. Select the date
+7. Submit the form
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Managing Transactions
 
-## How can I deploy this project?
+- View all transactions in the "Recent Transactions" section
+- Filter transactions by type using the dropdown
+- Sort transactions by date, amount, or category
+- Delete transactions by clicking the trash icon
 
-Simply open [Lovable](https://lovable.dev/projects/65d714e1-7f4d-4bbb-b3f2-1b01e96f37f1) and click on Share -> Publish.
+### Viewing Financial Summary
 
-## Can I connect a custom domain to my Lovable project?
+The dashboard displays:
+- Current balance
+- Total income
+- Total expenses
+- Total savings
+- Monthly charts showing financial trends
+- Expense breakdown by category
 
-Yes, you can!
+## Customization
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Adding New Categories
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+1. Select a transaction type
+2. Click "Add custom category" in the category dropdown
+3. Enter your new category name
+4. Click "Add"
+
+### Theming
+
+The application uses a financial-themed color scheme which can be customized in the `tailwind.config.ts` file.
+
+## Deployment
+
+To build the application for production:
+
+```sh
+npm run build
+# or
+yarn build
+```
+
+The build output will be in the `dist` directory, ready to be deployed to any static hosting service.
+
+## Future Enhancements
+
+- Cloud synchronization
+- Budget planning and alerts
+- Financial goal setting and tracking
+- Receipt scanning functionality
+- Export data as CSV/PDF
+- Multiple currency support
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

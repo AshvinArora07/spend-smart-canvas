@@ -12,3 +12,11 @@ export const transactionSchema = z.object({
 });
 
 export type TransactionFormValues = z.infer<typeof transactionSchema>;
+
+export type SortField = "date" | "amount" | "category";
+export type SortOrder = "asc" | "desc";
+
+export interface SortOptions {
+  field: SortField;
+  order: SortOrder;
+}
